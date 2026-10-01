@@ -1,0 +1,68 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+
+#define SOIL A0
+#define RELAY 3
+#define BUZZER 5
+
+LiquidCrystal_I2C lcd(0x27,16,2);
+DHT dht(DHTPIN, DHTTYPE);
+
+int moistureValue;
+int threshold = 600;   // adjust according to soil
+
+void setup()
+{
+  pinMode(RELAY, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+
+  digitalWrite(RELAY, HIGH);  // pump OFF
+  digitalWrite(BUZZER, LOW);
+
+  lcd.init();
+  lcd.backlight();
+
+  dht.begin();
+
+  lcd.setCursor(0,0);
+  lcd.print("Auto Irrigation");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop()
+{
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+
+  moistureValue = analogRead(SOIL);
+
+  lcd.setCursor(0,0);
+  lcd.print("T:");
+  lcd.print(temp);
+  lcd.print("C ");
+
+  lcd.print("H:");
+  lcd.print(hum);
+
+  lcd.setCursor(0,1);
+  lcd.print("Soil:");
+  lcd.print(moistureValue);
+
+  if(moistureValue > threshold)
+  {
+    digitalWrite(RELAY, LOW);   // pump ON
+    digitalWrite(BUZZER, HIGH);
+  }
+  else
+  {
+    digitalWrite(RELAY, HIGH);  // pump OFF
+    digitalWrite(BUZZER, LOW);
+  }
+
+  delay(2000);
+}
